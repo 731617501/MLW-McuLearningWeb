@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, defineAsyncComponent } from 'vue'
 const MemoryMap = defineAsyncComponent(() => import('./components/MemoryMap.vue'))
+const ProgrammingBasics = defineAsyncComponent(() => import('./components/ProgrammingBasics.vue'))
 
-const currentView = ref<'memory' | 'settings'>('memory')
+const currentView = ref<'memory' | 'basics' | 'settings'>('memory')
 const isDark = ref(true)
 const isSidebarExpanded = ref(false) // Default collapsed
 
@@ -50,6 +51,16 @@ onMounted(() => {
           <span class="icon">🗺️</span>
           <span class="label" v-show="isSidebarExpanded">Memory Map</span>
         </button>
+
+        <button 
+          class="nav-item" 
+          :class="{ active: currentView === 'basics' }" 
+          @click="currentView = 'basics'"
+          title="Programming Basics"
+        >
+          <span class="icon">📚</span>
+          <span class="label" v-show="isSidebarExpanded">Programming Basics</span>
+        </button>
         
         <button class="nav-item disabled" title="Interrupts (Coming Soon)">
           <span class="icon">⚡</span>
@@ -81,7 +92,7 @@ onMounted(() => {
         <div class="breadcrumbs">
           <span class="crumb-root">STM32F103</span>
           <span class="crumb-sep">/</span>
-          <span class="crumb-current">{{ currentView === 'memory' ? 'Memory Map' : 'Settings' }}</span>
+          <span class="crumb-current">{{ currentView === 'memory' ? 'Memory Map' : (currentView === 'basics' ? 'Programming Basics' : 'Settings') }}</span>
         </div>
         
         <div class="actions">
@@ -93,6 +104,7 @@ onMounted(() => {
 
       <main class="content-area">
         <MemoryMap v-if="currentView === 'memory'" />
+        <ProgrammingBasics v-else-if="currentView === 'basics'" />
         <div v-else class="placeholder-view">
           <h2>Settings</h2>
           <p>Configuration options will appear here.</p>

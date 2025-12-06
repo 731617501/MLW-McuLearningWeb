@@ -32,7 +32,7 @@
 
 1. 在终端中进入项目目录：
    ```bash
-   cd /home/wj/ai_copilot/stm32f103_reg_v1
+   cd /home/wj/ai_copilot/f103_reg_v1
    ```
 
 2. 安装依赖：
