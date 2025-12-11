@@ -4,6 +4,7 @@ const MemoryMap = defineAsyncComponent(() => import('./components/MemoryMap.vue'
 const ProgrammingBasics = defineAsyncComponent(() => import('./components/ProgrammingBasics.vue'))
 
 const currentView = ref<'memory' | 'basics' | 'settings'>('memory')
+const programmingLanguage = ref<'c' | 'rust'>('c')
 const isDark = ref(true)
 const isSidebarExpanded = ref(false) // Default collapsed
 
@@ -89,10 +90,18 @@ onMounted(() => {
     <!-- Main Content -->
     <div class="main-content">
       <header class="top-bar">
-        <div class="breadcrumbs">
-          <span class="crumb-root">STM32F103</span>
-          <span class="crumb-sep">/</span>
-          <span class="crumb-current">{{ currentView === 'memory' ? 'Memory Map' : (currentView === 'basics' ? 'Programming Basics' : 'Settings') }}</span>
+        <div class="view-controls" v-if="currentView === 'basics'">
+          <div class="segmented-control">
+            <div class="glider" :style="{ transform: programmingLanguage === 'c' ? 'translateX(0)' : 'translateX(100%)' }"></div>
+            <button 
+              :class="{ active: programmingLanguage === 'c' }" 
+              @click="programmingLanguage = 'c'"
+            >C 语言</button>
+            <button 
+              :class="{ active: programmingLanguage === 'rust' }" 
+              @click="programmingLanguage = 'rust'"
+            >Rust</button>
+          </div>
         </div>
         
         <div class="actions">
@@ -104,7 +113,7 @@ onMounted(() => {
 
       <main class="content-area">
         <MemoryMap v-if="currentView === 'memory'" />
-        <ProgrammingBasics v-else-if="currentView === 'basics'" />
+        <ProgrammingBasics v-else-if="currentView === 'basics'" :language="programmingLanguage" />
         <div v-else class="placeholder-view">
           <h2>Settings</h2>
           <p>Configuration options will appear here.</p>
@@ -271,29 +280,65 @@ onMounted(() => {
   height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 32px;
   border-bottom: 1px solid var(--ctp-surface0);
   background-color: transparent;
   flex-shrink: 0;
 }
 
-.breadcrumbs {
-  font-size: 0.9rem;
-  color: var(--ctp-subtext0);
+.view-controls {
   display: flex;
-  gap: 8px;
 }
 
-.crumb-root {
-  font-weight: 600;
+.segmented-control {
+  background: var(--ctp-surface0);
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  gap: 4px;
+  position: relative;
+  isolation: isolate;
 }
 
-.crumb-current {
+.glider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: var(--ctp-blue);
+  border-radius: 6px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: -1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.segmented-control button {
+  background: transparent;
+  border: none;
+  color: var(--ctp-subtext0);
+  padding: 4px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+  flex: 1;
+  min-width: 80px;
+}
+
+.segmented-control button:hover {
   color: var(--ctp-text);
 }
 
+.segmented-control button.active {
+  background: transparent;
+  color: var(--ctp-base);
+  box-shadow: none;
+}
+
 .actions {
+  margin-left: auto;
   display: flex;
   align-items: center;
 }

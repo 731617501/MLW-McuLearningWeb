@@ -1,41 +1,64 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, defineAsyncComponent } from 'vue'
+// @ts-ignore
+import mapIntroContent from '../data/map_intro.md?raw'
 
-const title = ref('编程基础')
+const MapFileViewer = defineAsyncComponent(() => import('./MapFileViewer.vue'))
+const MarkdownViewer = defineAsyncComponent(() => import('./MarkdownViewer.vue'))
+
+const props = defineProps<{
+  language: 'c' | 'rust'
+}>()
+
+const transitionName = ref('slide-left')
+const currentTab = ref<'visualizer' | 'doc'>('visualizer')
+
+watch(() => props.language, (newVal, oldVal) => {
+  if (newVal === 'rust' && oldVal === 'c') {
+    transitionName.value = 'slide-left'
+  } else {
+    transitionName.value = 'slide-right'
+  }
+})
 </script>
 
 <template>
   <div class="programming-basics">
-    <div class="header">
-      <h1>{{ title }}</h1>
-      <p class="subtitle">STM32 嵌入式开发基础知识</p>
-    </div>
-    
-    <div class="content-grid">
-      <div class="card">
-        <h3>C 语言基础</h3>
-        <p>指针、结构体、位操作等嵌入式开发必备知识。</p>
-        <button class="action-btn">开始学习</button>
-      </div>
-      
-      <div class="card">
-        <h3>寄存器操作</h3>
-        <p>理解寄存器映射、位带操作与直接地址访问。</p>
-        <button class="action-btn">开始学习</button>
-      </div>
-      
-      <div class="card">
-        <h3>编译与链接</h3>
-        <p>GCC 工具链、Makefile、链接脚本 (.ld) 解析。</p>
-        <button class="action-btn">开始学习</button>
+    <Transition :name="transitionName" mode="out-in">
+      <!-- C Language Content -->
+      <div v-if="language === 'c'" class="content-container" key="c">
+        <div class="control-bar">
+          <button 
+            class="nav-btn" 
+            :class="{ active: currentTab === 'visualizer' }"
+            @click="currentTab = 'visualizer'"
+          >
+            <span class="icon">📊</span> 可视化解析
+          </button>
+          <button 
+            class="nav-btn" 
+            :class="{ active: currentTab === 'doc' }"
+            @click="currentTab = 'doc'"
+          >
+            <span class="icon">📄</span> 详细文档
+          </button>
+        </div>
+        
+        <Transition name="fade-up" mode="out-in">
+          <MapFileViewer v-if="currentTab === 'visualizer'" />
+          <div v-else-if="currentTab === 'doc'" class="doc-container">
+            <MarkdownViewer :content="mapIntroContent" />
+          </div>
+        </Transition>
       </div>
 
-      <div class="card">
-        <h3>调试技巧</h3>
-        <p>GDB 使用、OpenOCD 配置与常见故障排查。</p>
-        <button class="action-btn">开始学习</button>
+      <!-- Rust Content -->
+      <div v-else-if="language === 'rust'" class="content-container" key="rust">
+        <div class="placeholder">
+          <p>Rust 内容开发中...</p>
+        </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -45,69 +68,103 @@ const title = ref('编程基础')
   height: 100%;
   overflow-y: auto;
   color: var(--ctp-text);
+  overflow-x: hidden; /* Prevent scrollbar during transition */
 }
 
-.header {
-  margin-bottom: 3rem;
+/* Transitions */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--ctp-green) 0%, var(--ctp-blue) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.slide-left-enter-from {
+  transform: translateX(30px);
+  opacity: 0;
+}
+.slide-left-leave-to {
+  transform: translateX(-30px);
+  opacity: 0;
 }
 
-.subtitle {
-  font-size: 1.1rem;
-  color: var(--ctp-subtext0);
+.slide-right-enter-from {
+  transform: translateX(-30px);
+  opacity: 0;
+}
+.slide-right-leave-to {
+  transform: translateX(30px);
+  opacity: 0;
 }
 
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.card {
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.control-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
   background: var(--ctp-surface0);
-  border: 1px solid var(--ctp-surface1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 4px;
+  border-radius: 8px;
+  width: fit-content;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-color: var(--ctp-blue);
-}
-
-.card h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
-  color: var(--ctp-text);
-}
-
-.card p {
-  color: var(--ctp-subtext0);
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
-}
-
-.action-btn {
-  background: var(--ctp-blue);
-  color: var(--ctp-base);
+.nav-btn {
+  background: transparent;
   border: none;
-  padding: 0.5rem 1rem;
+  color: var(--ctp-subtext0);
+  padding: 6px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.action-btn:hover {
-  opacity: 0.9;
+.nav-btn .icon {
+  font-size: 1.1em;
+}
+
+.nav-btn:hover {
+  color: var(--ctp-text);
+  background: var(--ctp-surface1);
+}
+
+.nav-btn.active {
+  background: var(--ctp-blue);
+  color: var(--ctp-base);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.doc-container {
+  background: var(--ctp-surface0);
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--ctp-surface1);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--ctp-subtext0);
 }
 </style>
